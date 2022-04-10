@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.4.22 <0.9.0;
+pragma solidity >=0.8.0 <0.9.0;
+pragma experimental ABIEncoderV2;
 
 contract CampaignFactory {
 
@@ -57,6 +58,10 @@ contract Campaign {
     }
   }
 
+  function getRequestsCount() public view returns (uint) {
+    return requests.length;
+  }
+
   function createRequest(string memory _description, address _recipient, uint _value) public onlyManager {
     Request storage newRequest = requests.push();
 
@@ -71,6 +76,7 @@ contract Campaign {
     Request storage request = requests[_index];
 
     require(approvers[msg.sender]);
+    require(!request.complete);
     require(!request.approvals[msg.sender]);
 
     request.approvals[msg.sender] = true;
@@ -85,6 +91,18 @@ contract Campaign {
 
     payable(request.recipient).transfer(request.value);
     request.complete = true;
+  }
+
+  function getSummary() public view returns (
+    uint, uint, uint, uint, address
+  ) {
+    return (
+      minimumContribution,
+      address(this).balance,
+      requests.length,
+      approversCount,
+      manager
+    );
   }
 
 }
